@@ -10,5 +10,5 @@ sql:
               emit_prepared_queries: false
               emit_empty_slices: true
               package: "db"
-              sql_package: "pgx/v5"
+              #   sql_package: "pgx/v5"
               out: "db/sqlc"
