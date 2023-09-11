@@ -26,8 +26,8 @@ func createRandomAccount(t *testing.T) Account {
 	require.Equal(t, account.Balance, args.Balance)
 	require.Equal(t, account.Currency, args.Currency)
 
-	require.NotNil(t, account.ID)
-	require.NotNil(t, account.CreatedAt)
+	require.NotZero(t, account.ID)
+	require.NotZero(t, account.CreatedAt)
 
 	return account
 }
