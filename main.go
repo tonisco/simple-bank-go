@@ -12,9 +12,9 @@ import (
 )
 
 func main() {
-	config,err := util.LoadConfig(".")
+	config, err := util.LoadConfig(".")
 
-	if err != nil{
+	if err != nil {
 		log.Fatal("Cannot not load environment variables", err)
 	}
 
@@ -26,7 +26,7 @@ func main() {
 
 	store := db.NewStore(conn)
 
-	server := api.NewServer(&store)
+	server := api.NewServer(store)
 
 	err = server.Start(config.ServerAddress)
 
