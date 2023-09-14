@@ -109,7 +109,7 @@ func TestGetAccountAPI(t *testing.T) {
 	}
 }
 
-func TestCreateAccount(t *testing.T) {
+func TestCreateAccountAPI(t *testing.T) {
 	account := randomAccount()
 	testCase := []struct {
 		name          string
@@ -216,6 +216,163 @@ func TestCreateAccount(t *testing.T) {
 	}
 }
 
+func TestListAccountsAPI(t *testing.T) {
+	n := 10
+	accounts := make([]db.Account, n)
+
+	for i := 0; i < n; i++ {
+		accounts[i] = randomAccount()
+	}
+
+	type Query struct {
+		pageID   int
+		pageSize int
+	}
+
+	testCase := []struct {
+		name          string
+		query         Query
+		buildStub     func(store *mockdb.MockStore)
+		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			buildStub: func(store *mockdb.MockStore) {
+				args := db.ListAccountsParams{
+					Limit:  5,
+					Offset: 0,
+				}
+				store.EXPECT().
+					ListAccounts(gomock.Any(), gomock.Eq(args)).
+					Times(1).
+					Return(accounts[:5], nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireBodyMatchAccounts(t, recorder.Body, accounts[:5])
+
+			},
+		},
+		{
+			name: "ok_with_pageID_and_pageSize",
+			query: Query{
+				pageID:   1,
+				pageSize: 10,
+			},
+			buildStub: func(store *mockdb.MockStore) {
+				args := db.ListAccountsParams{
+					Limit:  10,
+					Offset: 0,
+				}
+
+				store.EXPECT().
+					ListAccounts(gomock.Any(), gomock.Eq(args)).
+					Times(1).
+					Return(accounts, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireBodyMatchAccounts(t, recorder.Body, accounts)
+			},
+		},
+		{
+			name: "page_2",
+			query: Query{
+				pageID:   2,
+				pageSize: 5,
+			},
+			buildStub: func(store *mockdb.MockStore) {
+				args := db.ListAccountsParams{
+					Limit:  5,
+					Offset: 5,
+				}
+
+				store.EXPECT().
+					ListAccounts(gomock.Any(), gomock.Eq(args)).
+					Times(1).
+					Return(accounts[5:], nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireBodyMatchAccounts(t, recorder.Body, accounts[5:])
+			},
+		},
+		{
+			name: "invalid_pageID",
+			query: Query{
+				pageID:   0,
+				pageSize: 5,
+			},
+			buildStub: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListAccounts(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, recorder.Code, http.StatusInternalServerError)
+			},
+		},
+		{
+			name: "invalid_pageSize",
+			query: Query{
+				pageID:   1,
+				pageSize: 100000,
+			},
+			buildStub: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListAccounts(gomock.Any(), gomock.Any()).
+					Times(0)
+			}, checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, recorder.Code, http.StatusInternalServerError)
+			},
+		},
+		{
+			name: "internal_server_error",
+			query: Query{
+				pageID:   1,
+				pageSize: 5,
+			},
+			buildStub: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListAccounts(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return([]db.Account{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			ctr := gomock.NewController(t)
+			defer ctr.Finish()
+
+			store := mockdb.NewMockStore(ctr)
+			tc.buildStub(store)
+
+			recorder := httptest.NewRecorder()
+
+			var url string
+
+			if tc.query.pageID == 0 && tc.query.pageSize == 0 {
+				url = "/accounts"
+			} else {
+				url = fmt.Sprintf("/accounts?page_id=%v&page_size=%v", tc.query.pageID, tc.query.pageSize)
+			}
+
+			server := NewServer(store)
+			request, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			server.router.ServeHTTP(recorder, request)
+
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
 func randomAccount() db.Account {
 	return db.Account{
 		ID:       util.RandomInt(1, 1000),
@@ -233,4 +390,14 @@ func requireBodyMatchAccount(t *testing.T, body *bytes.Buffer, account db.Accoun
 	err = json.Unmarshal(data, &gotAccount)
 	require.NoError(t, err)
 	require.Equal(t, account, gotAccount)
+}
+
+func requireBodyMatchAccounts(t *testing.T, body *bytes.Buffer, accounts []db.Account) {
+	data, err := io.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotAccounts []db.Account
+	err = json.Unmarshal(data, &gotAccounts)
+	require.NoError(t, err)
+	require.Equal(t, accounts, gotAccounts)
 }
