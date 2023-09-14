@@ -19,8 +19,14 @@ dropdb:
 migrateup:
 	migrate -path db/migration -database "$(DB_URL)" -verbose up
 
+migrateup1:
+	migrate -path db/migration -database "$(DB_URL)" -verbose up 1
+
 migratedown:
 	migrate -path db/migration -database "$(DB_URL)" -verbose down
+
+migratedown1:
+	migrate -path db/migration -database "$(DB_URL)" -verbose down 1
 
 sqlc:
 	docker run --rm -v "$(PWD):/src" -w /src sqlc/sqlc generate
@@ -34,4 +40,4 @@ server:
 mock:
 	mockgen -destination db/mock/store.go -package mockdb github.com/tonisco/simple-bank-go/db/sqlc Store
 
-.PHONY: dbup dbdown postgres createdb dropdb migrateup migratedown sqlc test server mock
+.PHONY: dbup dbdown postgres createdb dropdb migrateup migrateup1 migratedown migratedown1 sqlc test server mock
