@@ -145,13 +145,9 @@ func (server *Server) deleteAccount(ctx *gin.Context) {
 	err := server.store.DeleteAccount(ctx, req.ID)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, struct{ message string }{message: "Account has been deleted successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Account has been deleted successfully"})
 }
