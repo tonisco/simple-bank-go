@@ -22,7 +22,7 @@ func NewJWTMaker(secretKey string) (Maker, error) {
 }
 
 // create token for a specific user name and duration
-func (maker *JWTMaker) createToken(username string, duration time.Duration) (string, error) {
+func (maker *JWTMaker) CreateToken(username string, duration time.Duration) (string, error) {
 	payload, err := NewPayload(username, duration)
 	if err != nil {
 		return "", err
@@ -33,7 +33,7 @@ func (maker *JWTMaker) createToken(username string, duration time.Duration) (str
 }
 
 // checks if token is valid
-func (maker *JWTMaker) verifyToken(token string) (*Payload, error) {
+func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidToken

@@ -94,7 +94,7 @@ func TestGetAccountAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			// start test server and send request
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/accounts/%d", tc.accountID)
@@ -198,7 +198,7 @@ func TestCreateAccountAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctr)
 			tc.buildStubs(store)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			data, err := json.Marshal(tc.body)
@@ -362,7 +362,7 @@ func TestListAccountsAPI(t *testing.T) {
 				url = fmt.Sprintf("/accounts?page_id=%v&page_size=%v", tc.query.pageID, tc.query.pageSize)
 			}
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -497,7 +497,7 @@ func TestUpdateAccountBalanceAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctr)
 			tc.buildStubs(store)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			data, err := json.Marshal(tc.params.body)
@@ -570,7 +570,7 @@ func TestDeleteAccountAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctr)
 			tc.buildStubs(store)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/accounts/%v", tc.accountID)
