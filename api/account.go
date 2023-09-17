@@ -141,7 +141,7 @@ func (server *Server) updateAccountBalance(ctx *gin.Context) {
 		return
 	}
 
-	// get payload from context  anc compare with account
+	// get payload from context and compare with account
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	if account.Owner != authPayload.Username {
 		err := errors.New("account does not belong to the authenticated user")
@@ -157,10 +157,6 @@ func (server *Server) updateAccountBalance(ctx *gin.Context) {
 	account, err = server.store.AddAccountBalance(ctx, args)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -180,7 +176,27 @@ func (server *Server) deleteAccount(ctx *gin.Context) {
 		return
 	}
 
-	err := server.store.DeleteAccount(ctx, req.ID)
+	// get account
+	account, err := server.store.GetAccount(ctx, req.ID)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// get payload from context and compare with account
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if account.Owner != authPayload.Username {
+		err := errors.New("account does not belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	err = server.store.DeleteAccount(ctx, req.ID)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))

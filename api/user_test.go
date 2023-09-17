@@ -10,12 +10,14 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 	mockdb "github.com/tonisco/simple-bank-go/db/mock"
 	db "github.com/tonisco/simple-bank-go/db/sqlc"
+	"github.com/tonisco/simple-bank-go/token"
 	"github.com/tonisco/simple-bank-go/util"
 	"go.uber.org/mock/gomock"
 )
@@ -189,31 +191,39 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
-	user, _ := randomUser(t)
+	user1, _ := randomUser(t)
+	user2, _ := randomUser(t)
 
 	testCases := []struct {
 		name          string
 		username      string
+		setAuth       func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name:     "OK",
-			username: user.Username,
+			username: user1.Username,
+			setAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetUser(gomock.Any(), gomock.Eq(user.Username)).
+					GetUser(gomock.Any(), gomock.Eq(user1.Username)).
 					Times(1).
-					Return(user, nil)
+					Return(user1, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchUser(t, recorder.Body, user)
+				requireBodyMatchUser(t, recorder.Body, user1)
 			},
 		},
 		{
 			name:     "invalidUsername",
 			username: ":username",
+			setAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					GetUser(gomock.Any(), gomock.Any()).
@@ -225,10 +235,13 @@ func TestGetUser(t *testing.T) {
 		},
 		{
 			name:     "NotFound",
-			username: user.Username,
+			username: user1.Username,
+			setAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetUser(gomock.Any(), gomock.Eq(user.Username)).
+					GetUser(gomock.Any(), gomock.Eq(user1.Username)).
 					Times(1).
 					Return(db.User{}, sql.ErrNoRows)
 			},
@@ -238,10 +251,29 @@ func TestGetUser(t *testing.T) {
 		},
 		{
 			name:     "InternalError",
-			username: user.Username,
+			username: user1.Username,
+			setAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetUser(gomock.Any(), gomock.Eq(user.Username)).
+					GetUser(gomock.Any(), gomock.Eq(user1.Username)).
+					Times(1).
+					Return(db.User{}, sql.ErrConnDone)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name:     "InternalError",
+			username: user1.Username,
+			setAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user2.Username, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					GetUser(gomock.Any(), gomock.Eq(user1.Username)).
 					Times(1).
 					Return(db.User{}, sql.ErrConnDone)
 			},
@@ -266,6 +298,7 @@ func TestGetUser(t *testing.T) {
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
+			tc.setAuth(t, request, server.tokenMaker)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
