@@ -45,16 +45,18 @@ func (server *Server) setupRouter() {
 	router.SetTrustedProxies([]string{"*"})
 
 	router.POST("/users", server.createUser)
-	router.GET("/users/:username", server.getUser)
 	router.POST("/users/login", server.loginUser)
 
-	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts", server.listAccounts)
-	router.GET("/accounts/:id", server.getAccount)
-	router.PUT("/accounts/:id", server.updateAccountBalance)
-	router.DELETE("/accounts/:id", server.deleteAccount)
+	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
-	router.POST("/transfers", server.createTransfer)
+	authRoutes.GET("/users/:username", server.getUser)
+	authRoutes.POST("/accounts", server.createAccount)
+	authRoutes.GET("/accounts", server.listAccounts)
+	authRoutes.GET("/accounts/:id", server.getAccount)
+	authRoutes.PUT("/accounts/:id", server.updateAccountBalance)
+	authRoutes.DELETE("/accounts/:id", server.deleteAccount)
+
+	authRoutes.POST("/transfers", server.createTransfer)
 
 	server.router = router
 }
