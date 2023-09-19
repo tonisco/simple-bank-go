@@ -1,0 +1,15 @@
+kind: Ingress
+metadata:
+    name: simple-bank-ingress
+spec:
+    rules:
+        - host: api.simple-bank.com #url
+          http:
+              paths:
+                  - pathType: Prefix
+                    path: "/"
+                    backend:
+                        service:
+                            name: simple-bank-api-service
+                            port:
+                                number: 80
