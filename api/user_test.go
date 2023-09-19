@@ -326,12 +326,9 @@ func TestLoginUser(t *testing.T) {
 					Times(1).
 					Return(user, nil)
 
-				args := db.CreateSessionParams{}
-
 				store.EXPECT().
-					CreateSession(gomock.Any(), gomock.Eq(args)).
-					Times(1).
-					Return(user, nil)
+					CreateSession(gomock.Any(), gomock.Any()).
+					Times(1)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
