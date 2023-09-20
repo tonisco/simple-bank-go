@@ -46,4 +46,9 @@ server:
 mock:
 	mockgen -destination db/mock/store.go -package mockdb github.com/tonisco/simple-bank-go/db/sqlc Store
 
-.PHONY: dbup dbdown postgres createdb dropdb migrateup migrateup1 migratedown migratedown1 db_docs db_schema sqlc test server mock
+proto:
+	protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+    --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
+    proto/*.proto
+
+.PHONY: dbup dbdown postgres createdb dropdb migrateup migrateup1 migratedown migratedown1 db_docs db_schema sqlc test server mock proto

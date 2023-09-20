@@ -1,0 +1,23 @@
+syntax ="proto3";
+
+package pb;
+
+import "user.proto";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/tonisco/simple-bank-go/pb";
+
+message LoginUserRequest{
+    string Username =1;
+	string Password=2;
+}
+
+message LoginUserResponse{
+    string SessionID =1;
+	string AccessToken =2;
+    google.protobuf.Timestamp AccessTokenExpiresAt =3;
+	string RefreshToken =4;
+    google.protobuf.Timestamp RefreshTokenExpiresAt =5;
+	User User =6;
+}
