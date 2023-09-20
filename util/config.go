@@ -11,10 +11,11 @@ import (
 type Config struct {
 	DBDriver             string        `mapstructure:"DB_DRIVER"`
 	DBSource             string        `mapstructure:"DB_SOURCE"`
-	ServerAddress        string        `mapstructure:"SERVER_ADDRESS"`
-	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY=12345678901234567890123456789012"`
-	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION=15m"`
-	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION=15m"`
+	HTTPServerAddress    string        `mapstructure:"HTTP_SERVER_ADDRESS"`
+	GRPCServerAddress    string        `mapstructure:"GRPC_SERVER_ADDRESS"`
+	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
+	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
 }
 
 // LoadConfig reads configuration from the config file or environment variable
