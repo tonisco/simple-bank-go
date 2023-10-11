@@ -3,12 +3,12 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_PASSWORD:user
-      - POSTGRES_USER:postgres
-      - POSTGRES_DB:simple_bank
+      - POSTGRES_PASSWORD=user
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=simple_bank
     ports:
       - 5432:5432
-  
+
   api:
     build:
       context: .
@@ -19,5 +19,5 @@ services:
       - DB_SOURCE=postgresql://postgres:user@postgres:5432/simple_bank?sslmode=disable
     depends_on:
       - postgres
-    entrypoint: ["/app/wait-for.sh", "postgres:5432","--", "/app/start.sh"]
-    command: ["app/main"]
+    entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
+    command: ["/app/main"]
