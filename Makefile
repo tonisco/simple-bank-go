@@ -8,7 +8,10 @@ dbdown:
 	docker compose -f db/docker-compose.yml down
 
 postgres:
-	docker run --name postgres --network bank-network -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:14-alpine
+	docker run --name postgres -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:15-alpine
+
+postgresW:
+	docker run --name postgres -p 5432:5432 --network bank-network -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:15-alpine
 
 createdb:
 	docker exec -it simple_bank createdb --username=root --owner=root simple_bank
@@ -59,4 +62,7 @@ proto:
 evans:
 	evans --host localhost --port 8090 -r repl
 
-.PHONY: dbup dbdown postgres createdb dropdb migrateup migrateup1 migratedown migratedown1 db_docs db_schema sqlc test server mock proto evans
+redis:
+	docker run --name redis -p 6379:6379 -d redis:7.2.1-alpine
+
+.PHONY: dbup dbdown postgres postgresW createdb dropdb migrateup migrateup1 migratedown migratedown1 db_docs db_schema sqlc test server mock proto evans redis
