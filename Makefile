@@ -19,6 +19,9 @@ createdb:
 dropdb:
 	docker exec -it simple_bank dropdb simple_bank
 
+new_migration:
+	migrate create -ext sql -dir db/migration -seq $(name)
+
 migrateup:
 	migrate -path db/migration -database "$(DB_URL)" -verbose up
 
@@ -65,4 +68,4 @@ evans:
 redis:
 	docker run --name redis -p 6379:6379 -d redis:7.2.1-alpine
 
-.PHONY: dbup dbdown postgres postgresW createdb dropdb migrateup migrateup1 migratedown migratedown1 db_docs db_schema sqlc test server mock proto evans redis
+.PHONY: dbup dbdown postgres postgresW createdb dropdb new_migration migrateup migrateup1 migratedown migratedown1 db_docs db_schema sqlc test server mock proto evans redis

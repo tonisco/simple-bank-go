@@ -16,6 +16,7 @@ import (
 	"github.com/tonisco/simple-bank-go/api"
 	db "github.com/tonisco/simple-bank-go/db/sqlc"
 	"github.com/tonisco/simple-bank-go/gapi"
+	"github.com/tonisco/simple-bank-go/mail"
 	"github.com/tonisco/simple-bank-go/pb"
 	"github.com/tonisco/simple-bank-go/util"
 	"github.com/tonisco/simple-bank-go/worker"
@@ -55,7 +56,7 @@ func main() {
 	}
 
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
-	go runTaskProcessor(redisOpt, store)
+	go runTaskProcessor(config, redisOpt, store)
 
 	go runGatewayServer(config, store, taskDistributor)
 	runGRPCServer(config, store, taskDistributor)
@@ -74,8 +75,9 @@ func runDBMigration(migrationURL, dbSource string) {
 	log.Info().Msg("db migrated successfully")
 }
 
-func runTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) {
-	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store)
+func runTaskProcessor(config util.Config, redisOpt asynq.RedisClientOpt, store db.Store) {
+	mailer := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mailer)
 	log.Info().Msg("started task processor")
 	err := taskProcessor.Start()
 	if err != nil {
