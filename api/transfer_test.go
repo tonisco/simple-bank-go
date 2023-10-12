@@ -293,7 +293,7 @@ func TestCreateTransfer(t *testing.T) {
 				store.EXPECT().
 					TransferTx(gomock.Any(), gomock.Eq(args)).
 					Times(1).
-					Return(db.TransferTxReturn{}, sql.ErrConnDone)
+					Return(db.TransferTxResult{}, sql.ErrConnDone)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
