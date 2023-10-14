@@ -136,7 +136,7 @@ func TestCreateTransfer(t *testing.T) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account1.ID)).
 					Times(1).
-					Return(db.Account{}, sql.ErrNoRows)
+					Return(db.Account{}, db.ErrRecordNotFound)
 
 				store.EXPECT().
 					GetAccount(gomock.Any(), account2.ID).
@@ -170,7 +170,7 @@ func TestCreateTransfer(t *testing.T) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account2.ID)).
 					Times(1).
-					Return(db.Account{}, sql.ErrNoRows)
+					Return(db.Account{}, db.ErrRecordNotFound)
 
 				store.EXPECT().
 					TransferTx(gomock.Any(), gomock.Any()).

@@ -1,17 +1,16 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 	"log"
 	"os"
 	"testing"
 
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tonisco/simple-bank-go/util"
 )
 
-var testQueries *Queries
-var testDb *sql.DB
+var testStore Store
 
 func TestMain(m *testing.M) {
 	var err error
@@ -22,13 +21,13 @@ func TestMain(m *testing.M) {
 		log.Fatal("cannot load environment variables")
 	}
 
-	testDb, err = sql.Open(config.DBDriver, config.DBSource)
+	connPool, err := pgxpool.New(context.Background(), config.DBSource)
 
 	if err != nil {
 		log.Fatal("Failed to connect to db:", err)
 	}
 
-	testQueries = New(testDb)
+	testStore = NewStore(connPool)
 
 	os.Exit(m.Run())
 }
