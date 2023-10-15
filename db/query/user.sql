@@ -24,3 +24,9 @@ SET
     is_email_verified = COALESCE(sqlc.narg(is_email_verified), is_email_verified)
 WHERE username = @username
 RETURNING *;
+
+-- name: UpdateUserRole :one 
+Update users
+SET role = $2
+WHERE username = $1
+RETURNING *;

@@ -150,3 +150,22 @@ func TestUpdateUserAllFields(t *testing.T) {
 	require.NotEqual(t, oldUser.FullName, updatedUser.FullName)
 	require.Equal(t, newFullName, updatedUser.FullName)
 }
+
+func TestUpdateUserRole(t *testing.T) {
+	randomUser := createRandomUser(t)
+
+	args := UpdateUserRoleParams{
+		Username: randomUser.Username,
+		Role:     util.BankerRole,
+	}
+
+	user, err := testStore.UpdateUserRole(context.Background(), args)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, user)
+
+	require.Equal(t, randomUser.Email, user.Email)
+	require.Equal(t, randomUser.FullName, user.FullName)
+	require.Equal(t, args.Username, user.Username)
+	require.Equal(t, util.BankerRole, user.Role)
+}
