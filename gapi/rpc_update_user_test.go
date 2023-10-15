@@ -58,6 +58,7 @@ func TestUpdateUserAPI(t *testing.T) {
 					PasswordChangedAt: user.PasswordChangedAt,
 					CreatedAt:         user.CreatedAt,
 					IsEmailVerified:   user.IsEmailVerified,
+					Role:              user.Role,
 				}
 				store.EXPECT().
 					UpdateUser(gomock.Any(), gomock.Eq(arg)).

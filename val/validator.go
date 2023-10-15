@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/mail"
 	"regexp"
+
+	"github.com/tonisco/simple-bank-go/util"
 )
 
 var (
@@ -68,4 +70,15 @@ func ValidateFullName(value string) error {
 	}
 
 	return nil
+}
+
+func ValidateRole(roleValue string) error {
+	existingRoles := []string{util.BankerRole, util.DepositorRole}
+
+	for _, role := range existingRoles {
+		if roleValue == role {
+			return nil
+		}
+	}
+	return fmt.Errorf("role does not exist")
 }

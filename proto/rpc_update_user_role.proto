@@ -1,0 +1,16 @@
+syntax ="proto3"; 
+
+package pb;
+
+import "user.proto";
+
+option go_package = "github.com/tonisco/simple-bank-go/pb";
+   
+message UpdateUserRoleRequest {
+    string username = 1;
+    string role = 2;
+}
+
+message UpdateUserRoleResponse {
+    User user = 1;
+}
