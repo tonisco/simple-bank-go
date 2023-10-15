@@ -16,10 +16,11 @@ INSERT INTO users (
     username,
     hashed_password,
     full_name,
-    email
+    email,
+    role
 ) VALUES (
-    $1, $2, $3, $4 
-) RETURNING username, hashed_password, full_name, email, password_changed_at, created_at, is_email_verified
+    $1, $2, $3, $4, $5
+) RETURNING username, hashed_password, full_name, email, password_changed_at, created_at, is_email_verified, role
 `
 
 type CreateUserParams struct {
@@ -27,6 +28,7 @@ type CreateUserParams struct {
 	HashedPassword string `json:"hashed_password"`
 	FullName       string `json:"full_name"`
 	Email          string `json:"email"`
+	Role           string `json:"role"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -35,6 +37,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.HashedPassword,
 		arg.FullName,
 		arg.Email,
+		arg.Role,
 	)
 	var i User
 	err := row.Scan(
@@ -45,12 +48,13 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.PasswordChangedAt,
 		&i.CreatedAt,
 		&i.IsEmailVerified,
+		&i.Role,
 	)
 	return i, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT username, hashed_password, full_name, email, password_changed_at, created_at, is_email_verified FROM users 
+SELECT username, hashed_password, full_name, email, password_changed_at, created_at, is_email_verified, role FROM users 
 WHERE username =$1
 LIMIT 1
 `
@@ -66,6 +70,7 @@ func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
 		&i.PasswordChangedAt,
 		&i.CreatedAt,
 		&i.IsEmailVerified,
+		&i.Role,
 	)
 	return i, err
 }
@@ -79,7 +84,7 @@ SET
     email= coalesce($4,email),
     is_email_verified = COALESCE($5, is_email_verified)
 WHERE username = $6
-RETURNING username, hashed_password, full_name, email, password_changed_at, created_at, is_email_verified
+RETURNING username, hashed_password, full_name, email, password_changed_at, created_at, is_email_verified, role
 `
 
 type UpdateUserParams struct {
@@ -109,6 +114,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.PasswordChangedAt,
 		&i.CreatedAt,
 		&i.IsEmailVerified,
+		&i.Role,
 	)
 	return i, err
 }

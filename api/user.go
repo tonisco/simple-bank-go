@@ -22,6 +22,7 @@ type userResponse struct {
 	Username          string    `json:"username"`
 	FullName          string    `json:"full_name"`
 	Email             string    `json:"email"`
+	Role              string    `json:"Role"`
 	PasswordChangedAt time.Time `json:"password_changed_at"`
 	CreatedAt         time.Time `json:"created_at"`
 }
@@ -33,6 +34,7 @@ func newUserResponse(user db.User) userResponse {
 		Email:             user.Email,
 		PasswordChangedAt: user.PasswordChangedAt,
 		CreatedAt:         user.CreatedAt,
+		Role:              user.Role,
 	}
 }
 
@@ -56,6 +58,7 @@ func (server *Server) createUser(ctx *gin.Context) {
 		HashedPassword: hashedPassword,
 		FullName:       req.FullName,
 		Email:          req.Email,
+		Role:           util.DepositorRole,
 	}
 
 	user, err := server.store.CreateUser(ctx, args)
@@ -140,13 +143,21 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, accessPayload, err := server.tokenMaker.CreateToken(user.Username, server.config.AccessTokenDuration)
+	accessToken, accessPayload, err := server.tokenMaker.CreateToken(
+		user.Username,
+		user.Role,
+		server.config.AccessTokenDuration,
+	)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(req.Username, server.config.RefreshTokenDuration)
+	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(
+		req.Username,
+		user.Role,
+		server.config.RefreshTokenDuration,
+	)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

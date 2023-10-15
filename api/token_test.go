@@ -15,6 +15,7 @@ import (
 	mockdb "github.com/tonisco/simple-bank-go/db/mock"
 	db "github.com/tonisco/simple-bank-go/db/sqlc"
 	"github.com/tonisco/simple-bank-go/token"
+	"github.com/tonisco/simple-bank-go/util"
 	"go.uber.org/mock/gomock"
 )
 
@@ -25,6 +26,7 @@ func TestRenewAccessToken(t *testing.T) {
 	type Params struct {
 		accessUsername   string
 		refreshUsername  string
+		role             string
 		accessDuration   time.Duration
 		refreshDuration  time.Duration
 		refreshIsBlocked bool
@@ -46,6 +48,7 @@ func TestRenewAccessToken(t *testing.T) {
 				}
 			},
 			params: Params{
+				role:             util.DepositorRole,
 				accessUsername:   user1.Username,
 				refreshUsername:  user1.Username,
 				accessDuration:   time.Minute,
@@ -72,6 +75,7 @@ func TestRenewAccessToken(t *testing.T) {
 				return gin.H{}
 			},
 			params: Params{
+				role:             util.DepositorRole,
 				accessUsername:   user1.Username,
 				refreshUsername:  user1.Username,
 				accessDuration:   time.Minute,
@@ -99,6 +103,7 @@ func TestRenewAccessToken(t *testing.T) {
 				}
 			},
 			params: Params{
+				role:             util.DepositorRole,
 				accessUsername:   user1.Username,
 				refreshUsername:  user1.Username,
 				accessDuration:   time.Minute,
@@ -126,6 +131,7 @@ func TestRenewAccessToken(t *testing.T) {
 				}
 			},
 			params: Params{
+				role:             util.DepositorRole,
 				accessUsername:   user1.Username,
 				refreshUsername:  user1.Username,
 				accessDuration:   time.Minute,
@@ -154,6 +160,7 @@ func TestRenewAccessToken(t *testing.T) {
 				}
 			},
 			params: Params{
+				role:             util.DepositorRole,
 				accessUsername:   user1.Username,
 				refreshUsername:  user1.Username,
 				accessDuration:   time.Minute,
@@ -182,6 +189,7 @@ func TestRenewAccessToken(t *testing.T) {
 				}
 			},
 			params: Params{
+				role:             util.DepositorRole,
 				accessUsername:   user1.Username,
 				refreshUsername:  user1.Username,
 				accessDuration:   time.Minute,
@@ -210,6 +218,7 @@ func TestRenewAccessToken(t *testing.T) {
 				}
 			},
 			params: Params{
+				role:             util.DepositorRole,
 				accessUsername:   user1.Username,
 				refreshUsername:  user1.Username,
 				accessDuration:   time.Minute,
@@ -240,6 +249,7 @@ func TestRenewAccessToken(t *testing.T) {
 				}
 			},
 			params: Params{
+				role:             util.DepositorRole,
 				accessUsername:   user1.Username,
 				refreshUsername:  user1.Username,
 				accessDuration:   time.Minute,
@@ -270,6 +280,7 @@ func TestRenewAccessToken(t *testing.T) {
 				}
 			},
 			params: Params{
+				role:             util.DepositorRole,
 				accessUsername:   user1.Username,
 				refreshUsername:  user1.Username,
 				accessDuration:   time.Minute,
@@ -307,6 +318,7 @@ func TestRenewAccessToken(t *testing.T) {
 				server.tokenMaker,
 				authorizationTypeBearer,
 				tc.params.accessUsername,
+				tc.params.role,
 				tc.params.accessDuration,
 			)
 			refreshToken, _, session := randomRefreshToken(
@@ -314,6 +326,7 @@ func TestRenewAccessToken(t *testing.T) {
 				server.tokenMaker,
 				authorizationTypeBearer,
 				tc.params.refreshUsername,
+				tc.params.role,
 				tc.params.refreshDuration,
 				tc.params.refreshIsBlocked,
 			)
@@ -334,8 +347,8 @@ func TestRenewAccessToken(t *testing.T) {
 	}
 }
 
-func randomAccessToken(t *testing.T, tokenMaker token.Maker, authorizationType, username string, duration time.Duration) (string, *token.Payload) {
-	accessToken, payload, err := tokenMaker.CreateToken(username, duration)
+func randomAccessToken(t *testing.T, tokenMaker token.Maker, authorizationType, username string, role string, duration time.Duration) (string, *token.Payload) {
+	accessToken, payload, err := tokenMaker.CreateToken(username, role, duration)
 	require.NoError(t, err)
 	return accessToken, payload
 }
@@ -345,10 +358,11 @@ func randomRefreshToken(
 	tokenMaker token.Maker,
 	authorizationType,
 	username string,
+	role string,
 	duration time.Duration,
 	isBlocked bool,
 ) (string, *token.Payload, db.Session) {
-	RefreshToken, payload, err := tokenMaker.CreateToken(username, duration)
+	RefreshToken, payload, err := tokenMaker.CreateToken(username, role, duration)
 	require.NoError(t, err)
 
 	session := db.Session{

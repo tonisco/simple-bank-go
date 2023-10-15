@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	_"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {

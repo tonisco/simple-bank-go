@@ -66,8 +66,15 @@ func TestCreateUser(t *testing.T) {
 				"email":     user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.CreateUserParams{
+					Username: user.Username,
+					FullName: user.FullName,
+					Email:    user.Email,
+					Role:     util.DepositorRole,
+				}
+
 				store.EXPECT().
-					CreateUser(gomock.Any(), gomock.Any()).
+					CreateUser(gomock.Any(), EqCreateUserParams(arg, password)).
 					Times(1).
 					Return(user, nil)
 			},
@@ -204,7 +211,7 @@ func TestGetUser(t *testing.T) {
 			name:     "OK",
 			username: user1.Username,
 			setAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, user1.Role, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -221,7 +228,7 @@ func TestGetUser(t *testing.T) {
 			name:     "invalidUsername",
 			username: ":username",
 			setAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, user1.Role, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -236,7 +243,7 @@ func TestGetUser(t *testing.T) {
 			name:     "NotFound",
 			username: user1.Username,
 			setAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, user1.Role, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -252,7 +259,7 @@ func TestGetUser(t *testing.T) {
 			name:     "InternalError",
 			username: user1.Username,
 			setAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, user1.Role, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -268,7 +275,7 @@ func TestGetUser(t *testing.T) {
 			name:     "InternalError",
 			username: user1.Username,
 			setAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user2.Username, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user2.Username, user2.Role, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -432,6 +439,7 @@ func randomUser(t *testing.T) (user db.User, password string) {
 	user = db.User{
 		Username:       util.RandomOwner(),
 		HashedPassword: hashedPassword,
+		Role:           util.DepositorRole,
 		FullName:       util.RandomOwner(),
 		Email:          util.RandomEmail(),
 	}
@@ -447,7 +455,10 @@ func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {
 	err = json.Unmarshal(data, &gotUser)
 	require.NoError(t, err)
 
+	fmt.Println(gotUser)
+
 	require.Equal(t, user.Email, gotUser.Email)
+	require.Equal(t, user.Role, gotUser.Role)
 	require.Equal(t, user.FullName, gotUser.FullName)
 	require.Equal(t, user.Username, gotUser.Username)
 }
