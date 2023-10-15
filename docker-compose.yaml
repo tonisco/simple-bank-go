@@ -11,7 +11,7 @@ services:
     volumes:
       - data-volume:/var/lib/postgresql/data
 
-    redis:
+  redis:
       image: redis:7.2.1-alpine
 
   api:

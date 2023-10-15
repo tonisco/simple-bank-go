@@ -20,9 +20,6 @@ func TestUpdateUserRoleAPI(t *testing.T) {
 	user, _ := randomUser(t)
 	user1, _ := randomUser(t)
 
-	// newName := util.RandomOwner()
-	// newEmail := util.RandomEmail()
-	// invalidEmail := "invalid-email"
 	user.Role = util.BankerRole
 
 	testCases := []struct {
